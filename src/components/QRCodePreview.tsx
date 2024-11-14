@@ -4,6 +4,9 @@ import { Download, Upload, Image, X } from 'lucide-react';
 import { InputType, QRStyle, CornerStyle } from './QRCodeGenerator';
 import { QRFrame } from './QRFrameStyles';
 import { toPng } from 'html-to-image';
+import { parse } from 'svg-parser';
+import { stringify } from 'svgson';
+import ReactDOMServer from 'react-dom/server';
 
 type ExportFormat = 'PNG' | 'JPG' | 'SVG';
 type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
@@ -131,43 +134,71 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else {
-        // Get the QR code SVG content
-        const qrCodeSvg = qrCodeRef.current.querySelector('svg');
-        if (!qrCodeSvg) return;
+      } else if (format === 'SVG') {
+        // Create SVG container
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const containerWidth = size + 80;
+        const containerHeight = size + (textPosition === 'left' || textPosition === 'right' ? 0 : 80);
+        
+        svg.setAttribute('width', String(containerWidth));
+        svg.setAttribute('height', String(containerHeight));
+        svg.setAttribute('viewBox', `0 0 ${containerWidth} ${containerHeight}`);
 
-        // Create a new SVG document
-        const svgDoc = `
-          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-          <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg"
-            width="${size + 80}"
-            height="${size + 80}"
-            viewBox="0 0 ${size + 80} ${size + 80}"
-          >
-            <rect
-              width="100%"
-              height="100%"
-              fill="${backgroundColor}"
-              rx="${cornerRadius}"
-            />
-            <g transform="translate(40, ${textPosition === 'bottom' ? '20' : '40'})">
-              ${qrCodeSvg.innerHTML}
-            </g>
-            <text
-              x="${textAlign === 'center' ? size/2 + 40 : textAlign === 'right' ? size + 60 : 20}"
-              y="${textPosition === 'bottom' ? size + 60 : 25}"
-              text-anchor="${textAlign === 'center' ? 'middle' : textAlign}"
-              fill="${frameColor}"
-              style="font-family: ${frameFont}; font-size: ${fontSize}px; font-weight: ${fontWeight};"
-            >${frameText}</text>
-          </svg>
-        `;
+        // Add background
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', backgroundColor);
+        rect.setAttribute('rx', String(cornerRadius));
+        svg.appendChild(rect);
 
-        // Create blob and trigger download
-        const blob = new Blob([svgDoc], { type: 'image/svg+xml' });
+        // Add QR Code
+        const qrCodeX = textPosition === 'left' ? 120 : 40;
+        const qrCodeY = textPosition === 'top' ? 60 : 40;
+        
+        const qrCodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        qrCodeGroup.setAttribute('transform', `translate(${qrCodeX}, ${qrCodeY})`);
+        
+        const qrCodeSvg = ReactDOMServer.renderToString(
+          <QRCodeSVG
+            value={input}
+            size={size}
+            level="H"
+            bgColor={bgColor}
+            fgColor={fgColor}
+            includeMargin={true}
+            {...getQRStyles()}
+          />
+        );
+        qrCodeGroup.innerHTML = qrCodeSvg;
+        svg.appendChild(qrCodeGroup);
+
+        // Add text
+        if (frameText) {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          const textX = textPosition === 'left' ? 20 :
+                       textPosition === 'right' ? size + 60 :
+                       size / 2 + 40;
+          const textY = textPosition === 'top' ? 30 :
+                       textPosition === 'bottom' ? size + 60 :
+                       size / 2 + 40;
+
+          text.setAttribute('x', String(textX));
+          text.setAttribute('y', String(textY));
+          text.setAttribute('text-anchor', textAlign);
+          text.setAttribute('fill', frameColor);
+          text.setAttribute('font-family', font);
+          text.setAttribute('font-size', `${fontSize}px`);
+          text.setAttribute('font-weight', fontWeight);
+          text.textContent = frameText;
+          svg.appendChild(text);
+        }
+
+        // Convert to blob and download
+        const svgString = new XMLSerializer().serializeToString(svg);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
+        
         const link = document.createElement('a');
         link.download = `${filename}.svg`;
         link.href = url;

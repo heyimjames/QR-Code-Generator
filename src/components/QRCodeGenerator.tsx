@@ -28,6 +28,8 @@ export interface QRCodeData {
 }
 
 export function QRCodeGenerator() {
+  console.log('Rendering QRCodeGenerator');
+
   // Default values
   const defaultValues = {
     size: 256,
@@ -103,68 +105,73 @@ export function QRCodeGenerator() {
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-ios-gray-900">QR Code Generator</h1>
+          <p className="text-ios-gray-600">Create custom QR codes for your needs</p>
+        </div>
+
+        {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Controls */}
           <div className="space-y-6">
-            <div className="bg-white rounded-ios-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-6">
-                <Tabs defaultValue="content" className="w-full">
-                  <div className="flex items-center justify-between">
-                    <TabsList className="justify-start">
-                      <TabsTrigger value="content">Content</TabsTrigger>
-                      <TabsTrigger value="frame">Design</TabsTrigger>
-                    </TabsList>
-                    <button
-                      onClick={handleReset}
-                      className="h-9 px-3 text-sm font-medium text-ios-danger 
-                               border border-ios-danger rounded-ios
-                               hover:bg-ios-danger/5 transition-colors"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                  
-                  <TabsContent value="content">
-                    <InputSection
-                      inputType={inputType}
-                      setInputType={setInputType}
-                      input={input}
-                      setInput={validateInput}
-                      error={error}
-                      setError={setError}
-                    />
-                  </TabsContent>
+            <div className="bg-white rounded-ios-lg shadow-sm p-6 relative">
+              {/* Reset Button - Pinned to top-right with updated hover style */}
+              <button
+                onClick={handleReset}
+                className="absolute top-6 right-6 h-9 px-3 text-sm font-medium text-ios-danger 
+                         bg-ios-danger/5 rounded-ios transition-colors border border-transparent
+                         hover:border-ios-danger"
+              >
+                Reset to default styling
+              </button>
 
-                  <TabsContent value="frame">
-                    <QRFrameCustomizer
-                      frameStyle={frameStyle}
-                      setFrameStyle={setFrameStyle}
-                      frameText={frameText}
-                      setFrameText={setFrameText}
-                      frameFont={frameFont}
-                      setFrameFont={setFrameFont}
-                      frameColor={frameColor}
-                      setFrameColor={setFrameColor}
-                      textPosition={textPosition}
-                      setTextPosition={setTextPosition}
-                      backgroundColor={backgroundColor}
-                      setBackgroundColor={setBackgroundColor}
-                      cornerRadius={cornerRadius}
-                      setCornerRadius={setCornerRadius}
-                      fontSize={fontSize}
-                      setFontSize={setFontSize}
-                      fontWeight={fontWeight}
-                      setFontWeight={setFontWeight}
-                      textAlign={textAlign}
-                      setTextAlign={setTextAlign}
-                      fgColor={fgColor}
-                      setFgColor={setFgColor}
-                      bgColor={bgColor}
-                      setBgColor={setBgColor}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </div>
+              <Tabs defaultValue="content" className="w-full">
+                <TabsList className="justify-start">
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="frame">Design</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="content" className="mt-6">
+                  <InputSection
+                    inputType={inputType}
+                    setInputType={setInputType}
+                    input={input}
+                    setInput={validateInput}
+                    error={error}
+                    setError={setError}
+                  />
+                </TabsContent>
+
+                <TabsContent value="frame" className="mt-6">
+                  <QRFrameCustomizer
+                    frameStyle={frameStyle}
+                    setFrameStyle={setFrameStyle}
+                    frameText={frameText}
+                    setFrameText={setFrameText}
+                    frameFont={frameFont}
+                    setFrameFont={setFrameFont}
+                    frameColor={frameColor}
+                    setFrameColor={setFrameColor}
+                    textPosition={textPosition}
+                    setTextPosition={setTextPosition}
+                    backgroundColor={backgroundColor}
+                    setBackgroundColor={setBackgroundColor}
+                    cornerRadius={cornerRadius}
+                    setCornerRadius={setCornerRadius}
+                    fontSize={fontSize}
+                    setFontSize={setFontSize}
+                    fontWeight={fontWeight}
+                    setFontWeight={setFontWeight}
+                    textAlign={textAlign}
+                    setTextAlign={setTextAlign}
+                    fgColor={fgColor}
+                    setFgColor={setFgColor}
+                    bgColor={bgColor}
+                    setBgColor={setBgColor}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
@@ -188,7 +195,6 @@ export function QRCodeGenerator() {
                 backgroundColor={backgroundColor}
                 cornerRadius={cornerRadius}
                 logoUrl={logoUrl}
-                setLogoUrl={setLogoUrl}
                 errorCorrection={errorCorrection}
                 highContrast={highContrast}
                 gradientColors={gradientColors}

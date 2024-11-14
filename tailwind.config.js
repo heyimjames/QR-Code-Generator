@@ -1,18 +1,22 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
+  darkMode: ["class"],
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
+  prefix: "",
   theme: {
     extend: {
       colors: {
         'ios': {
-          'primary': '#007AFF', // iOS blue
-          'secondary': '#5856D6', // iOS purple
-          'success': '#34C759', // iOS green
-          'warning': '#FF9500', // iOS orange
-          'danger': '#FF3B30', // iOS red
+          'primary': '#007AFF',
+          'secondary': '#5856D6',
+          'success': '#34C759',
+          'warning': '#FF9500',
+          'danger': '#FF3B30',
           'gray': {
             50: '#F5F5F5',
             100: '#EBEBEB',
@@ -25,15 +29,15 @@ export default {
             800: '#5C5C5C',
             900: '#474747',
           },
-          'background': '#F2F2F7', // iOS light gray background
-          'groupedBackground': '#FFFFFF', // iOS grouped table view background
-          'separator': '#C6C6C8', // iOS separator color
+          'background': '#F2F2F7',
+          'groupedBackground': '#FFFFFF',
+          'separator': '#C6C6C8',
         }
       },
       borderRadius: {
-        'ios': '10px', // iOS standard corner radius
-        'ios-lg': '14px', // iOS large corner radius
-        'ios-xl': '18px', // iOS extra large corner radius
+        'ios': '10px',
+        'ios-lg': '14px',
+        'ios-xl': '18px',
       },
     },
   },

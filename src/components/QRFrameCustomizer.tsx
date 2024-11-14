@@ -6,6 +6,15 @@ import { Info, Type, Layout, PaintBucket, CornerUpLeft, Upload } from 'lucide-re
 import * as Tooltip from '@radix-ui/react-tooltip';
 import type { FrameStyle, TextPosition } from './QRFrameStyles';
 
+// Add new types
+type GradientDirection = 'to-right' | 'to-bottom' | 'to-bottom-right' | 'to-bottom-left';
+type CustomFrameOptions = {
+  backgroundImage?: string;
+  gradientStart?: string;
+  gradientEnd?: string;
+  gradientDirection?: GradientDirection;
+};
+
 interface QRFrameCustomizerProps {
   frameStyle: FrameStyle;
   setFrameStyle: (style: FrameStyle) => void;
@@ -31,6 +40,8 @@ interface QRFrameCustomizerProps {
   setFgColor: (color: string) => void;
   bgColor: string;
   setBgColor: (color: string) => void;
+  customOptions: CustomFrameOptions;
+  setCustomOptions: (options: CustomFrameOptions) => void;
 }
 
 const GOOGLE_FONTS = [
@@ -78,6 +89,8 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
   setFgColor,
   bgColor,
   setBgColor,
+  customOptions,
+  setCustomOptions,
 }) => {
   const defaultFrameTexts = [
     'Scan Me',
@@ -148,6 +161,129 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
     </Tooltip.Provider>
   );
 
+  // Add custom frame options section that shows when frameStyle is 'custom' or 'gradient'
+  const renderCustomOptions = () => {
+    if (frameStyle === 'custom') {
+      return (
+        <div className="space-y-4 mt-4">
+          <Label className="text-sm text-ios-gray-600">Custom Frame Options</Label>
+          <div className="space-y-4">
+            {/* Background Image Upload */}
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const result = e.target?.result;
+                      if (typeof result === 'string') {
+                        setCustomOptions((prev) => ({
+                          ...prev,
+                          backgroundImage: result,
+                        }));
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="hidden"
+                id="bg-image-upload"
+              />
+              <label
+                htmlFor="bg-image-upload"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-ios-primary 
+                        bg-ios-background rounded-ios hover:bg-ios-gray-50 cursor-pointer"
+              >
+                <Upload size={16} />
+                Upload Background Image
+              </label>
+              {customOptions?.backgroundImage && (
+                <button
+                  onClick={() => setCustomOptions((prev) => ({ ...prev, backgroundImage: undefined }))}
+                  className="ml-2 text-ios-danger hover:text-ios-danger/80"
+                >
+                  Remove Image
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (frameStyle === 'gradient') {
+      return (
+        <div className="space-y-4 mt-4">
+          <Label className="text-sm text-ios-gray-600">Gradient Options</Label>
+          <div className="space-y-4">
+            {/* Start Color */}
+            <div>
+              <Label className="text-sm text-ios-gray-600">Start Color</Label>
+              <input
+                type="color"
+                value={customOptions?.gradientStart || '#fdfbfb'}
+                onChange={(e) => setCustomOptions((prev) => ({
+                  ...prev,
+                  gradientStart: e.target.value,
+                }))}
+                className="w-full h-10 rounded-ios cursor-pointer"
+              />
+            </div>
+
+            {/* End Color */}
+            <div>
+              <Label className="text-sm text-ios-gray-600">End Color</Label>
+              <input
+                type="color"
+                value={customOptions?.gradientEnd || '#ebedee'}
+                onChange={(e) => setCustomOptions((prev) => ({
+                  ...prev,
+                  gradientEnd: e.target.value,
+                }))}
+                className="w-full h-10 rounded-ios cursor-pointer"
+              />
+            </div>
+
+            {/* Gradient Direction */}
+            <div>
+              <Label className="text-sm text-ios-gray-600">Direction</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: '120deg', label: 'Diagonal' },
+                  { value: '90deg', label: 'Horizontal' },
+                  { value: '180deg', label: 'Vertical' },
+                  { value: '45deg', label: 'Reverse Diagonal' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCustomOptions((prev) => ({
+                      ...prev,
+                      gradientDirection: value,
+                    }))}
+                    className={`
+                      px-4 py-2 rounded-ios text-sm transition-all
+                      ${customOptions?.gradientDirection === value 
+                        ? 'bg-ios-primary text-white' 
+                        : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
+                      }
+                    `}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-8">
       {/* Frame Style Section */}
@@ -188,6 +324,9 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Divider */}
+      <div className="h-px bg-ios-separator/50" />
 
       {/* Colors Section */}
       <div className="space-y-4">
@@ -266,8 +405,11 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="h-px bg-ios-separator/50" />
+
       {/* Text Settings Group */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center">
           <Label className="text-base font-semibold text-ios-gray-900 flex items-center gap-2">
             <Type size={16} className="text-ios-gray-500" />
@@ -275,138 +417,168 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
           </Label>
           {renderTooltip("Text Settings", "Customize the appearance of your frame text")}
         </div>
-        
-        {/* Font Family */}
-        <div className="space-y-2">
-          <Label className="text-sm text-ios-gray-600">Font Family</Label>
-          <select
-            id="font-select"
-            value={frameFont}
-            onChange={(e) => setFrameFont(e.target.value)}
+
+        {/* Frame Text Input - Moved up */}
+        <div className="space-y-3">
+          <Label className="text-sm text-ios-gray-600">Frame Text</Label>
+          <Input
+            value={frameText}
+            onChange={(e) => setFrameText(e.target.value)}
+            placeholder="Enter text to display with QR code"
             className="w-full p-3 rounded-ios border border-ios-separator bg-ios-background 
                      text-ios-gray-900 focus:outline-none focus:ring-2 focus:ring-ios-primary"
-            style={{ fontFamily: frameFont }}
-          >
-            {GOOGLE_FONTS.map(font => (
-              <option 
-                key={font.value} 
-                value={font.value}
-                style={{ fontFamily: font.value }}
-              >
-                {font.name}
-              </option>
-            ))}
-          </select>
-          
-          {/* Custom Font Upload */}
-          <div className="mt-2">
-            <input
-              type="file"
-              accept=".ttf,.otf"
-              onChange={handleFontUpload}
-              className="hidden"
-              id="font-upload"
-            />
-            <label
-              htmlFor="font-upload"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-ios-primary 
-                      bg-ios-background rounded-ios hover:bg-ios-gray-50 cursor-pointer"
-            >
-              <Upload size={16} />
-              Upload Custom Font
-            </label>
-            <p className="mt-1 text-xs text-ios-gray-500">Supports TTF and OTF files</p>
-          </div>
-        </div>
-
-        {/* Font Size */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm text-ios-gray-600">Font Size</Label>
-            <span className="text-sm text-ios-gray-500">{fontSize}px</span>
-          </div>
-          <Slider
-            value={[fontSize]}
-            onValueChange={([value]) => setFontSize(value)}
-            min={12}
-            max={32}
-            step={1}
-            className="w-full"
           />
-        </div>
-
-        {/* Font Weight */}
-        <div className="space-y-2">
-          <Label className="text-sm text-ios-gray-600">Font Weight</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {FONT_WEIGHTS.map(weight => (
+          <div className="flex flex-wrap gap-2">
+            {defaultFrameTexts.map(text => (
               <button
-                key={weight.value}
-                onClick={() => setFontWeight(weight.value)}
-                className={`
-                  px-3 py-2 rounded-ios text-sm transition-all
-                  ${fontWeight === weight.value 
-                    ? 'bg-ios-primary text-white' 
-                    : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
-                  }
-                `}
+                key={text}
+                onClick={() => setFrameText(text)}
+                className="px-3 py-1.5 text-sm bg-ios-background rounded-ios text-ios-gray-700 
+                         hover:bg-ios-gray-50 transition-colors"
               >
-                {weight.name}
+                {text}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Text Alignment */}
-        <div className="space-y-2">
-          <Label className="text-sm text-ios-gray-600">Text Alignment</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { value: 'left', icon: 'align-left' },
-              { value: 'center', icon: 'align-center' },
-              { value: 'right', icon: 'align-right' }
-            ].map(({ value, icon }) => (
-              <button
-                key={value}
-                onClick={() => setTextAlign(value as 'left' | 'center' | 'right')}
-                className={`
-                  px-3 py-2 rounded-ios text-sm transition-all
-                  ${textAlign === value 
-                    ? 'bg-ios-primary text-white' 
-                    : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
-                  }
-                `}
+        {/* Font Controls */}
+        <div className="space-y-4">
+          {/* Font Family */}
+          <div className="space-y-2">
+            <Label className="text-sm text-ios-gray-600">Font Family</Label>
+            <select
+              id="font-select"
+              value={frameFont}
+              onChange={(e) => setFrameFont(e.target.value)}
+              className="w-full p-3 rounded-ios border border-ios-separator bg-ios-background 
+                       text-ios-gray-900 focus:outline-none focus:ring-2 focus:ring-ios-primary"
+              style={{ fontFamily: frameFont }}
+            >
+              {GOOGLE_FONTS.map(font => (
+                <option 
+                  key={font.value} 
+                  value={font.value}
+                  style={{ fontFamily: font.value }}
+                >
+                  {font.name}
+                </option>
+              ))}
+            </select>
+            
+            {/* Custom Font Upload */}
+            <div className="mt-2">
+              <input
+                type="file"
+                accept=".ttf,.otf"
+                onChange={handleFontUpload}
+                className="hidden"
+                id="font-upload"
+              />
+              <label
+                htmlFor="font-upload"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-ios-primary 
+                        bg-ios-background rounded-ios hover:bg-ios-gray-50 cursor-pointer"
               >
-                {value.charAt(0).toUpperCase() + value.slice(1)}
-              </button>
-            ))}
+                <Upload size={16} />
+                Upload Custom Font
+              </label>
+              <p className="mt-1 text-xs text-ios-gray-500">Supports TTF and OTF files</p>
+            </div>
           </div>
-        </div>
 
-        {/* Text Position */}
-        <div className="space-y-2">
-          <Label className="text-sm text-ios-gray-600">Code Position on Card</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { value: 'top', label: 'Text Above' },
-              { value: 'bottom', label: 'Text Below' },
-              { value: 'left', label: 'Text Left' },
-              { value: 'right', label: 'Text Right' }
-            ].map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setTextPosition(value as TextPosition)}
-                className={`
-                  px-4 py-2.5 rounded-ios text-sm transition-all
-                  ${textPosition === value 
-                    ? 'bg-ios-primary text-white' 
-                    : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
-                  }
-                `}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Font Size */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-ios-gray-600">Font Size</Label>
+              <span className="text-sm text-ios-gray-500">{fontSize}px</span>
+            </div>
+            <Slider
+              value={[fontSize]}
+              onValueChange={([value]) => setFontSize(value)}
+              min={12}
+              max={32}
+              step={1}
+              className="w-full"
+            />
+          </div>
+
+          {/* Font Weight */}
+          <div className="space-y-2">
+            <Label className="text-sm text-ios-gray-600">Font Weight</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {FONT_WEIGHTS.map(weight => (
+                <button
+                  key={weight.value}
+                  onClick={() => setFontWeight(weight.value)}
+                  className={`
+                    px-3 py-2 rounded-ios text-sm transition-all
+                    ${fontWeight === weight.value 
+                      ? 'bg-ios-primary text-white' 
+                      : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
+                    }
+                  `}
+                >
+                  {weight.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Text Alignment */}
+          <div className="space-y-2">
+            <Label className="text-sm text-ios-gray-600">Text Alignment</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'left', icon: 'align-left' },
+                { value: 'center', icon: 'align-center' },
+                { value: 'right', icon: 'align-right' }
+              ].map(({ value, icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTextAlign(value as 'left' | 'center' | 'right')}
+                  className={`
+                    px-3 py-2 rounded-ios text-sm transition-all
+                    ${textAlign === value 
+                      ? 'bg-ios-primary text-white' 
+                      : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
+                    }
+                  `}
+                >
+                  {value.charAt(0).toUpperCase() + value.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-ios-separator/50" />
+
+          {/* Text Position */}
+          <div className="space-y-2">
+            <Label className="text-sm text-ios-gray-600">Code Position on Card</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'top', label: 'Text Above' },
+                { value: 'bottom', label: 'Text Below' },
+                { value: 'left', label: 'Text Left' },
+                { value: 'right', label: 'Text Right' }
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setTextPosition(value as TextPosition)}
+                  className={`
+                    px-4 py-2.5 rounded-ios text-sm transition-all
+                    ${textPosition === value 
+                      ? 'bg-ios-primary text-white' 
+                      : 'bg-ios-background text-ios-gray-700 hover:bg-ios-gray-50'
+                    }
+                  `}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -427,29 +599,8 @@ export const QRFrameCustomizer: React.FC<QRFrameCustomizerProps> = ({
         />
       </div>
 
-      {/* Frame Text Input */}
-      <div className="space-y-3">
-        <Label className="text-base font-semibold text-ios-gray-900">Frame Text</Label>
-        <Input
-          value={frameText}
-          onChange={(e) => setFrameText(e.target.value)}
-          placeholder="Enter text to display with QR code"
-          className="w-full p-3 rounded-ios border border-ios-separator bg-ios-background 
-                     text-ios-gray-900 focus:outline-none focus:ring-2 focus:ring-ios-primary"
-        />
-        <div className="flex flex-wrap gap-2">
-          {defaultFrameTexts.map(text => (
-            <button
-              key={text}
-              onClick={() => setFrameText(text)}
-              className="px-3 py-1.5 text-sm bg-ios-background rounded-ios text-ios-gray-700 
-                       hover:bg-ios-gray-50 transition-colors"
-            >
-              {text}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Add custom options after frame style selection */}
+      {renderCustomOptions()}
     </div>
   );
 }; 
